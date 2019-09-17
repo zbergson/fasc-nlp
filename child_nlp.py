@@ -5,9 +5,6 @@ from spacy.lang.en import LEMMA_INDEX, LEMMA_EXC, LEMMA_RULES
 lemmatizer = Lemmatizer(LEMMA_INDEX, LEMMA_EXC, LEMMA_RULES)
 nlp = spacy.load("en_core_web_sm")
 
-noun_matcher = PhraseMatcher(nlp.vocab)
-verb_matcher = PhraseMatcher(nlp.vocab)
-adjective_matcher = PhraseMatcher(nlp.vocab)
 phrase_matcher = PhraseMatcher(nlp.vocab)
 
 noun_terms = []
