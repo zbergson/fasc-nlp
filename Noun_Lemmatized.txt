@@ -30,3 +30,4 @@ sympathy 
 tantrum 
 distaste
 upset
+lie
