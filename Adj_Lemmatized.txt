@@ -22,7 +22,7 @@ Fearful
 Fearless
 Flattered
 Friendly
-Frighten
+Frightened
 Funny
 Fun
 Fussy
@@ -63,7 +63,8 @@ Mean
 Yucky
 Upset
 Unhappy
-Threaten Traumatized
+Threaten
+Traumatized
 Terrified
 Surprised
 Stubborn
