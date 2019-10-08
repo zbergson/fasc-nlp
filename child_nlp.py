@@ -59,13 +59,11 @@ for token in doc:
   if token.pos_ == 'ADV':
     adverbs.append(token.lemma_)
   if token.pos_ == 'VERB':
-    print(token)
     verbs.append(token.lemma_)
   if token.pos_ == 'ADJ':
     adjectives.append(token.lemma_)
 ##figure out a way to count mental term twice if it shows up twice
 ## 
-print(adverbs)
 adj_intersect = set(adjective_terms).intersection(adjectives)
 print(adj_intersect, 'adjective')
 verb_intersect = set(verb_terms).intersection(verbs)
