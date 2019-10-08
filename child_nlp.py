@@ -4,6 +4,7 @@ from spacy.lemmatizer import Lemmatizer
 from spacy.lang.en import LEMMA_INDEX, LEMMA_EXC, LEMMA_RULES
 lemmatizer = Lemmatizer(LEMMA_INDEX, LEMMA_EXC, LEMMA_RULES)
 nlp = spacy.load("en_core_web_sm")
+import csv
 
 phrase_matcher = PhraseMatcher(nlp.vocab)
 
@@ -40,7 +41,7 @@ phrase_patterns = [nlp.make_doc(phrase_text) for phrase_text in phrase_terms]
 
 phrase_matcher.add("TerminologyListPhrase", None, *phrase_patterns)
 
-doc = nlp(u"To avoid upsetting his aunt. Might be short tempered or have a bad meltdown when angry.")
+doc = nlp(u"they are going to bully him")
 nouns = []
 verbs = []
 adjectives = []
@@ -51,17 +52,18 @@ for token in doc:
   if token.pos_ == 'ADV':
     adverbs.append(token.lemma_)
   if token.pos_ == 'VERB':
+    print(token)
     verbs.append(token.lemma_)
   if token.pos_ == 'ADJ':
     adjectives.append(token.lemma_)
-
-
+##figure out a way to count mental term twice if it shows up twice
+## 
 adj_intersect = set(adjective_terms).intersection(adjectives)
-print(adj_intersect)
+print(adj_intersect, 'adjective')
 verb_intersect = set(verb_terms).intersection(verbs)
-print(verb_intersect)
+print(verb_intersect, 'verb')
 noun_intersect = set(noun_terms).intersection(nouns)
-print(noun_intersect)
+print(noun_intersect, 'noun')
 
 phrase_matches = phrase_matcher(doc)
 for match_id, start, end in phrase_matches:
