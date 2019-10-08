@@ -29,6 +29,13 @@ with open('./Adj_Lemmatized.txt', 'r') as wordDoc:
       currentPlace = currentPlace.replace(u'\xa0', u'')
       adjective_terms.append(currentPlace.lower())
 
+adverb_terms = []
+with open('./AdVerb_Lemmatized.txt', 'r') as wordDoc:
+    for line in wordDoc:
+      currentPlace = line[:-1]
+      currentPlace = currentPlace.replace(u'\xa0', u'')
+      adverb_terms.append(currentPlace.lower())
+
 phrase_terms = []
 with open('./Phrase_Lemmatized.txt', 'r') as wordDoc:
     for line in wordDoc:
@@ -58,12 +65,15 @@ for token in doc:
     adjectives.append(token.lemma_)
 ##figure out a way to count mental term twice if it shows up twice
 ## 
+print(adverbs)
 adj_intersect = set(adjective_terms).intersection(adjectives)
 print(adj_intersect, 'adjective')
 verb_intersect = set(verb_terms).intersection(verbs)
 print(verb_intersect, 'verb')
 noun_intersect = set(noun_terms).intersection(nouns)
 print(noun_intersect, 'noun')
+adverb_intersect = set(adverb_terms).intersection(adverbs)
+print(adverb_intersect, 'adverb')
 
 phrase_matches = phrase_matcher(doc)
 for match_id, start, end in phrase_matches:
