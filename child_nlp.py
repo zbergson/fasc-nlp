@@ -47,14 +47,25 @@ with open('./Phrase_Lemmatized.txt', 'r') as wordDoc:
 
 
 regression_data = pd.read_csv('./regression_2_fasc.csv')
-regression_data = regression_data.dropna(subset=['Mental_terms_tot'])
-total_mental = regression_data['Mental_terms_tot'].sum()
+regression_data = regression_data.dropna(subset=['response_text'])
+regression_data = regression_data[~regression_data['username'].isin(['2308', '2302','2914','2913','2916',
+'2918','2917','2908','3015','3026'])]
+# regression_data['Mental_terms_tot'] = regression_data.Mental_terms_tot.fillna('')
+
+## Add this back in once NA's are gone ####
+# total_mental = regression_data['Mental_terms_tot'].sum()
+########################################
 phrase_patterns = [nlp.make_doc(phrase_text) for phrase_text in phrase_terms]
 
 phrase_matcher.add("TerminologyListPhrase", None, *phrase_patterns)
 regression_total_count = 0
 response_text = regression_data.response_text.replace(np.nan, '', regex=True)
 regression_count_new_col = []
+regression_adjective_list = []
+regression_verb_list = []
+regression_noun_list = []
+regression_adverb_list = []
+regression_phrase_list = []
 for sentence in response_text:
   doc = nlp(sentence)
   nouns = []
@@ -73,6 +84,10 @@ for sentence in response_text:
   ##figure out a way to count mental term twice if it shows up twice
   adj_intersect = set(adjective_terms).intersection(adjectives)
   adjectives_count = 0
+  if len(adj_intersect) > 0:
+    regression_adjective_list.append(adj_intersect)
+  else:
+    regression_adjective_list.append('')
   for word in adj_intersect:
     count = adjectives.count(word)
     adjectives_count = adjectives_count + count
@@ -80,6 +95,10 @@ for sentence in response_text:
   # print(adj_intersect, 'adjective')
 
   verb_intersect = set(verb_terms).intersection(verbs)
+  if len(verb_intersect) > 0:
+    regression_verb_list.append(verb_intersect)
+  else:
+    regression_verb_list.append('')
   verbs_count = 0
   for word in verb_intersect:
     count = verbs.count(word)
@@ -88,6 +107,10 @@ for sentence in response_text:
   # print(verb_intersect, 'verb')
 
   noun_intersect = set(noun_terms).intersection(nouns)
+  if len(noun_intersect) > 0:
+    regression_noun_list.append(noun_intersect)
+  else:
+    regression_noun_list.append('')
   noun_count = 0
   for word in noun_intersect:
     count = nouns.count(word)
@@ -96,6 +119,10 @@ for sentence in response_text:
   # print(noun_intersect, 'noun')
 
   adverb_intersect = set(adverb_terms).intersection(adverbs)
+  if len(adverb_intersect) > 0:
+    regression_adverb_list.append(adverb_intersect)
+  else:
+    regression_adverb_list.append('')
   adverb_count = 0
   for word in adverb_intersect:
     count = adverbs.count(word)
@@ -109,6 +136,7 @@ for sentence in response_text:
       span = doc[start:end]
       phrase_array.append(span.text)
   phrase_count = len(phrase_array)
+  regression_phrase_list.append(' + '.join(phrase_array))
   # print(phrase_count)
   
   total_count = phrase_count + adverb_count + noun_count + verbs_count + adjectives_count
@@ -116,22 +144,36 @@ for sentence in response_text:
   regression_count_new_col.append(total_count)
   regression_total_count = regression_total_count + total_count
 
+print(regression_adjective_list)
 regression_data['nlp_count'] = regression_count_new_col
+regression_data['adjective_list'] = regression_adjective_list
+regression_data['verb_list'] = regression_verb_list
+regression_data['noun_list'] = regression_noun_list
+regression_data['adverb_list'] = regression_adverb_list
+regression_data['phrase_list'] = regression_phrase_list
 print(regression_total_count)
-print(total_mental)
+print('not counted yet')
 regression_data.to_csv('regression_2_fasc_nlp_analysis.csv', encoding='utf-8', index=False)
 nlp_count_arr = []
 mental_terms_tot_arr = []
 for row in regression_data.nlp_count:
   nlp_count_arr.append(int(row))
 
+can_do_comparison = True
 for row in regression_data.Mental_terms_tot:
-  mental_terms_tot_arr.append(int(row))
+  if (pd.isna(row)):
+    can_do_comparison = False
+    #print("can't calculate b/c NA exists in column. Please count mental terms for comparison")
+  else:
+    mental_terms_tot_arr.append(int(row))
 
 
 num_wrong = 0
-for i, num in enumerate(nlp_count_arr):
-  num_for_mental = mental_terms_tot_arr[i]
-  if (num_for_mental != num):
-    num_wrong = num_wrong + 1
-print(num_wrong)
+if (can_do_comparison):
+  for i, num in enumerate(nlp_count_arr):
+    num_for_mental = mental_terms_tot_arr[i]
+    if (num_for_mental != num):
+      num_wrong = num_wrong + 1
+  print(num_wrong)
+else:
+  print('must get rid of NA in mental terms total column to do this')
