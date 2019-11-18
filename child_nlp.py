@@ -46,14 +46,27 @@ with open('./Phrase_Lemmatized.txt', 'r') as wordDoc:
       phrase_terms.append(currentPlace)
 
 
-regression_data = pd.read_csv('./regression_2_fasc.csv')
+# x = pd.read_csv('~/documents/F17_S18_FASCPILOT2_Coded.csv', encoding = "ISO-8859-1")
+
+# y = pd.read_csv('./fasc_data/regression_2_fasc.csv')
+
+# common = x.merge(y, on=['responseID'])
+# x = x[(~x.responseID.isin(common.responseID))]
+
+# print(x)
+
+# x.to_csv('./fasc_data/remaining_80_percent.csv')
+
+
+regression_data = pd.read_csv('./fasc_data/20%_regression_2_fasc_nlp_analysis.csv')
 regression_data = regression_data.dropna(subset=['response_text'])
 regression_data = regression_data[~regression_data['username'].isin(['2308', '2302','2914','2913','2916',
 '2918','2917','2908','3015','3026'])]
-# regression_data['Mental_terms_tot'] = regression_data.Mental_terms_tot.fillna('')
+regression_data = regression_data.dropna(subset=['mental_terms_count_F19'])
+#regression_data['mental_terms_count_F19'] = regression_data.Mental_terms_tot.fillna('')
 
 ## Add this back in once NA's are gone ####
-# total_mental = regression_data['Mental_terms_tot'].sum()
+total_mental = regression_data['mental_terms_count_F19'].sum()
 ########################################
 phrase_patterns = [nlp.make_doc(phrase_text) for phrase_text in phrase_terms]
 
@@ -72,15 +85,23 @@ for sentence in response_text:
   verbs = []
   adjectives = []
   adverbs = []
-  for token in doc: 
+  for i, token in enumerate(doc): 
     if token.pos_ == 'NOUN':
       nouns.append(token.lemma_)
     if token.pos_ == 'ADV':
       adverbs.append(token.lemma_)
     if token.pos_ == 'VERB':
-      verbs.append(token.lemma_)
+      if token.lemma_ == 'think':
+        # if word preceding think is I, don't count
+        if (str(doc[i - 1]) != 'i' and str(doc[i - 1]) != 'I'):
+          verbs.append(token.lemma_)
+      else:
+        verbs.append(token.lemma_)
     if token.pos_ == 'ADJ':
-      adjectives.append(token.lemma_)
+      # if (str(doc[i]) == 'bad'):
+      #   adjectives.append(token.lemma_)
+      if (str(doc[i - 1]) != 'feel'):
+        adjectives.append(token.lemma_)
   ##figure out a way to count mental term twice if it shows up twice
   adj_intersect = set(adjective_terms).intersection(adjectives)
   adjectives_count = 0
@@ -95,6 +116,7 @@ for sentence in response_text:
   # print(adj_intersect, 'adjective')
 
   verb_intersect = set(verb_terms).intersection(verbs)
+  # print(verbs)
   if len(verb_intersect) > 0:
     regression_verb_list.append(verb_intersect)
   else:
@@ -144,23 +166,20 @@ for sentence in response_text:
   regression_count_new_col.append(total_count)
   regression_total_count = regression_total_count + total_count
 
-print(regression_adjective_list)
 regression_data['nlp_count'] = regression_count_new_col
 regression_data['adjective_list'] = regression_adjective_list
 regression_data['verb_list'] = regression_verb_list
 regression_data['noun_list'] = regression_noun_list
 regression_data['adverb_list'] = regression_adverb_list
 regression_data['phrase_list'] = regression_phrase_list
-print(regression_total_count)
-print('not counted yet')
-regression_data.to_csv('regression_2_fasc_nlp_analysis.csv', encoding='utf-8', index=False)
+regression_data.to_csv('./fasc_data/regression_2_fasc_nlp_analysis.csv', encoding='utf-8', index=False)
 nlp_count_arr = []
 mental_terms_tot_arr = []
 for row in regression_data.nlp_count:
   nlp_count_arr.append(int(row))
 
 can_do_comparison = True
-for row in regression_data.Mental_terms_tot:
+for row in regression_data.mental_terms_count_F19:
   if (pd.isna(row)):
     can_do_comparison = False
     #print("can't calculate b/c NA exists in column. Please count mental terms for comparison")

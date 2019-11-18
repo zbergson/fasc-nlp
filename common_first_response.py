@@ -11,10 +11,10 @@ nlp = spacy.load("en_core_web_sm")
 import pandas as pd
 import shutil
 
-regression_data = pd.read_csv('./total_fasc.csv', encoding = "ISO-8859-1")
+regression_data = pd.read_csv('./fasc_data/total_fasc.csv', encoding = "ISO-8859-1")
 regression_data = regression_data.dropna(subset=['Com_first_resp'])
 regression_data = regression_data.dropna(subset=['response_text'])
-regression_data = regression_data.loc[regression_data['condition_value'] == 'B']
+regression_data = regression_data.loc[regression_data['condition_value'] == 'G']
 
 df = pd.DataFrame(regression_data, columns = ['Com_first_resp', 'response_text_spell-checked'])
 pos = df['Com_first_resp'] = 1
@@ -96,7 +96,9 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, rando
 
 # randomforest is the first one i tried
 from sklearn.ensemble import GradientBoostingClassifier
+# from sklearn.naive_bayes import ComplementNB
 classifier = GradientBoostingClassifier(n_estimators=1000, random_state=0, learning_rate=1.0, max_depth=3)
+# classifier = ComplementNB(alpha=1.0, fit_prior=True, class_prior=None, norm=False)
 classifier.fit(X_train, y_train)
 
 y_pred = classifier.predict(X_test)

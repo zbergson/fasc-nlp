@@ -23,7 +23,8 @@ expect 
 fear 
 forget 
 frighten 
-fuss 
+fuss
+feel
 guess 
 hate 
 hope 
