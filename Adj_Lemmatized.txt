@@ -99,3 +99,5 @@ Tense
 Bossy
 Crazy
 Relieve
+Worried
+Confused
