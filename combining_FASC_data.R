@@ -127,5 +127,5 @@ tallies <- FASC_S17_F17_S18_all_Rounds%>% #should be about 630 in each Round 3 -
   as.data.frame()
 
 #WARNING: BE CAREFUL WITH WRITING - the randomly assigned reliability rounds will be different each time!
-#last generated on 12-6-19 at 5:55PM
-#write_csv(FASC_S17_F17_S18_all_Rounds, "../FASC_S17_F17_S18_all_Rounds_12-6-19.csv")
+#last generated on 12-7-19 at 5:40PM
+#write_csv(FASC_S17_F17_S18_all_Rounds, "../FASC_S17_F17_S18_all_Rounds_12-7-19.csv")
