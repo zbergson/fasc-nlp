@@ -94,3 +94,6 @@ suspect 
 spook
 excite
 upset
+insult
+frustrate
+terrify

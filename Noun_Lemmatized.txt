@@ -17,7 +17,6 @@ smile 
 comfort 
 compliment 
 desire 
-plan
 mistake
 trust 
 thought 
@@ -32,3 +31,7 @@ distaste
 upset
 lie
 fear
+opinion
+embarrassment
+anger
+jealousy
