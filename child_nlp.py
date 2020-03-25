@@ -7,6 +7,8 @@ nlp = spacy.load("en_core_web_sm")
 import csv
 import pandas as pd
 import numpy as np
+import os
+import glob
 
 phrase_matcher = PhraseMatcher(nlp.vocab)
 
@@ -58,21 +60,33 @@ with open('./Phrase_Lemmatized.txt', 'r') as wordDoc:
 # x.to_csv('./fasc_data/remaining_80_percent.csv')
 
 
-regression_data = pd.read_csv('./fasc_data/20%_regression_2_fasc_nlp_analysis.csv')
-regression_data = regression_data.dropna(subset=['response_text'])
-regression_data = regression_data[~regression_data['username'].isin(['2308', '2302','2914','2913','2916',
-'2918','2917','2908','3015','3026'])]
-regression_data = regression_data.dropna(subset=['mental_terms_count_F19'])
+regression_data = pd.read_csv('./fasc_data/FASC_S17_F17_S18_all_Rounds_12-7-19_CHECKED.csv', encoding = "ISO-8859-1")
+regression_data_other_rounds_and_asd = pd.read_csv('./fasc_data/FASC_S17_F17_S18_all_Rounds_12-7-19_CHECKED.csv', encoding = "ISO-8859-1")
+regression_data_round_three_ASD_1 = pd.read_csv('./fasc_data/FASC_S17_F17_S18_all_Rounds_12-7-19_CHECKED.csv', encoding = "ISO-8859-1")
+
+regression_data = regression_data.dropna(subset=['spelling_checked_response_text'])
+regression_data = regression_data.loc[regression_data['ASD'] == 0]
+regression_data = regression_data.loc[regression_data['Round'] == 3]
+regression_data = regression_data.dropna(subset=['Mental_terms_tot_2'])
+
+regression_data_other_rounds_and_asd = regression_data_other_rounds_and_asd.loc[regression_data_other_rounds_and_asd['ASD'] == 0]
+regression_data_other_rounds_and_asd = regression_data_other_rounds_and_asd.loc[(regression_data_other_rounds_and_asd['Round'] > 3) | (regression_data_other_rounds_and_asd['Round'] < 3)]
+
+regression_data_round_three_ASD_1 = regression_data_round_three_ASD_1.loc[regression_data_round_three_ASD_1['ASD'] == 1]
+regression_data_round_three_ASD_1 = regression_data_round_three_ASD_1.loc[regression_data_round_three_ASD_1['Round'] >= 0]
+print(len(regression_data), 'regression_data')
+print(len(regression_data_other_rounds_and_asd), 'second')
+print(len(regression_data_round_three_ASD_1), 'third')
 #regression_data['mental_terms_count_F19'] = regression_data.Mental_terms_tot.fillna('')
 
 ## Add this back in once NA's are gone ####
-total_mental = regression_data['mental_terms_count_F19'].sum()
+total_mental = regression_data['Mental_terms_tot_2'].sum()
 ########################################
 phrase_patterns = [nlp.make_doc(phrase_text) for phrase_text in phrase_terms]
 
 phrase_matcher.add("TerminologyListPhrase", None, *phrase_patterns)
 regression_total_count = 0
-response_text = regression_data.response_text.replace(np.nan, '', regex=True)
+response_text = regression_data.spelling_checked_response_text.replace(np.nan, '', regex=True)
 regression_count_new_col = []
 regression_adjective_list = []
 regression_verb_list = []
@@ -166,20 +180,33 @@ for sentence in response_text:
   regression_count_new_col.append(total_count)
   regression_total_count = regression_total_count + total_count
 
-regression_data['nlp_count'] = regression_count_new_col
-regression_data['adjective_list'] = regression_adjective_list
-regression_data['verb_list'] = regression_verb_list
-regression_data['noun_list'] = regression_noun_list
-regression_data['adverb_list'] = regression_adverb_list
-regression_data['phrase_list'] = regression_phrase_list
-regression_data.to_csv('./fasc_data/regression_2_fasc_nlp_analysis.csv', encoding='utf-8', index=False)
+#common_first_response_combined = pd.read_csv('./fasc_data/machine_scores/combined_machine_scores.csv', encoding = "ISO-8859-1")
+regression_data_sample_data = regression_data
+regression_data_sample_data['nlp_count'] = regression_count_new_col
+regression_data_sample_data['adjective_list'] = regression_adjective_list
+regression_data_sample_data['verb_list'] = regression_verb_list
+regression_data_sample_data['noun_list'] = regression_noun_list
+regression_data_sample_data['adverb_list'] = regression_adverb_list
+regression_data_sample_data['phrase_list'] = regression_phrase_list
+regression_data.to_csv('./fasc_data/machine_mental_terms_descriptives.csv', encoding='utf-8', index=False)
+old_mental_terms_count = regression_data.Mental_terms_tot_2
+regression_data['Mental_terms_tot_2'] = regression_count_new_col
+
+regression_data.to_csv('./fasc_data/machine_scores_mental_terms/machine_mental_terms_score.csv', encoding='utf-8', index=False)
+regression_data_other_rounds_and_asd.to_csv('./fasc_data/machine_scores_mental_terms/other_rounds.csv', encoding='utf-8', index=False)
+regression_data_round_three_ASD_1.to_csv('./fasc_data/machine_scores_mental_terms/last_round.csv', encoding='utf-8', index=False)
+os.chdir("./fasc_data/machine_scores_mental_terms")
+extension = 'csv'
+all_filenames = [i for i in glob.glob('*.{}'.format(extension))]
+combined_csv = pd.concat([pd.read_csv(f) for f in all_filenames ], sort=False)
+combined_csv.to_csv( "combined_machine_scores_mental_terms.csv", index=False, encoding='utf-8-sig')
 nlp_count_arr = []
 mental_terms_tot_arr = []
-for row in regression_data.nlp_count:
+for row in regression_data.Mental_terms_tot_2:
   nlp_count_arr.append(int(row))
 
 can_do_comparison = True
-for row in regression_data.mental_terms_count_F19:
+for row in old_mental_terms_count:
   if (pd.isna(row)):
     can_do_comparison = False
     #print("can't calculate b/c NA exists in column. Please count mental terms for comparison")
@@ -196,3 +223,5 @@ if (can_do_comparison):
   print(num_wrong)
 else:
   print('must get rid of NA in mental terms total column to do this')
+
+print(mental_terms_tot_arr, nlp_count_arr)
