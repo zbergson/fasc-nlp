@@ -60,27 +60,30 @@ with open('./Phrase_Lemmatized.txt', 'r') as wordDoc:
 # x.to_csv('./fasc_data/remaining_80_percent.csv')
 
 
-regression_data = pd.read_csv('./fasc_data/FASC_S17_F17_S18_all_Rounds_12-7-19_CHECKED.csv', encoding = "ISO-8859-1")
+regression_data = pd.read_csv('./fasc_data/FASC_S19_cleaned_SC_reliability_CHECKED.csv', encoding = "ISO-8859-1")
 regression_data_other_rounds_and_asd = pd.read_csv('./fasc_data/FASC_S17_F17_S18_all_Rounds_12-7-19_CHECKED.csv', encoding = "ISO-8859-1")
 regression_data_round_three_ASD_1 = pd.read_csv('./fasc_data/FASC_S17_F17_S18_all_Rounds_12-7-19_CHECKED.csv', encoding = "ISO-8859-1")
 
+verifying_algorithm = False
+
 regression_data = regression_data.dropna(subset=['spelling_checked_response_text'])
-regression_data = regression_data.loc[regression_data['ASD'] == 0]
-regression_data = regression_data.loc[regression_data['Round'] == 3]
-regression_data = regression_data.dropna(subset=['Mental_terms_tot_2'])
+# regression_data = regression_data.loc[regression_data['ASD'] == 0]
+# regression_data = regression_data.loc[regression_data['Round'] == 3]
+if (verifying_algorithm == True):
+  regression_data = regression_data.dropna(subset=['Mental_terms_tot_2'])
 
-regression_data_other_rounds_and_asd = regression_data_other_rounds_and_asd.loc[regression_data_other_rounds_and_asd['ASD'] == 0]
-regression_data_other_rounds_and_asd = regression_data_other_rounds_and_asd.loc[(regression_data_other_rounds_and_asd['Round'] > 3) | (regression_data_other_rounds_and_asd['Round'] < 3)]
+# regression_data_other_rounds_and_asd = regression_data_other_rounds_and_asd.loc[regression_data_other_rounds_and_asd['ASD'] == 0]
+# regression_data_other_rounds_and_asd = regression_data_other_rounds_and_asd.loc[(regression_data_other_rounds_and_asd['Round'] > 3) | (regression_data_other_rounds_and_asd['Round'] < 3)]
 
-regression_data_round_three_ASD_1 = regression_data_round_three_ASD_1.loc[regression_data_round_three_ASD_1['ASD'] == 1]
-regression_data_round_three_ASD_1 = regression_data_round_three_ASD_1.loc[regression_data_round_three_ASD_1['Round'] >= 0]
+# regression_data_round_three_ASD_1 = regression_data_round_three_ASD_1.loc[regression_data_round_three_ASD_1['ASD'] == 1]
+# regression_data_round_three_ASD_1 = regression_data_round_three_ASD_1.loc[regression_data_round_three_ASD_1['Round'] >= 0]
 print(len(regression_data), 'regression_data')
-print(len(regression_data_other_rounds_and_asd), 'second')
-print(len(regression_data_round_three_ASD_1), 'third')
+# print(len(regression_data_other_rounds_and_asd), 'second')
+# print(len(regression_data_round_three_ASD_1), 'third')
 #regression_data['mental_terms_count_F19'] = regression_data.Mental_terms_tot.fillna('')
 
 ## Add this back in once NA's are gone ####
-total_mental = regression_data['Mental_terms_tot_2'].sum()
+# total_mental = regression_data['Mental_terms_tot_2'].sum()
 ########################################
 phrase_patterns = [nlp.make_doc(phrase_text) for phrase_text in phrase_terms]
 
@@ -189,39 +192,41 @@ regression_data_sample_data['noun_list'] = regression_noun_list
 regression_data_sample_data['adverb_list'] = regression_adverb_list
 regression_data_sample_data['phrase_list'] = regression_phrase_list
 regression_data.to_csv('./fasc_data/machine_mental_terms_descriptives.csv', encoding='utf-8', index=False)
-old_mental_terms_count = regression_data.Mental_terms_tot_2
-regression_data['Mental_terms_tot_2'] = regression_count_new_col
+if (verifying_algorithm == True):
+  old_mental_terms_count = regression_data.Mental_terms_tot_2
+regression_data['Mental_terms_tot'] = regression_count_new_col
 
-regression_data.to_csv('./fasc_data/machine_scores_mental_terms/machine_mental_terms_score.csv', encoding='utf-8', index=False)
-regression_data_other_rounds_and_asd.to_csv('./fasc_data/machine_scores_mental_terms/other_rounds.csv', encoding='utf-8', index=False)
-regression_data_round_three_ASD_1.to_csv('./fasc_data/machine_scores_mental_terms/last_round.csv', encoding='utf-8', index=False)
-os.chdir("./fasc_data/machine_scores_mental_terms")
-extension = 'csv'
-all_filenames = [i for i in glob.glob('*.{}'.format(extension))]
-combined_csv = pd.concat([pd.read_csv(f) for f in all_filenames ], sort=False)
-combined_csv.to_csv( "combined_machine_scores_mental_terms.csv", index=False, encoding='utf-8-sig')
-nlp_count_arr = []
-mental_terms_tot_arr = []
-for row in regression_data.Mental_terms_tot_2:
-  nlp_count_arr.append(int(row))
+regression_data.to_csv('./fasc_data/machine_scores_mental_terms/machine_mental_terms_score_S19.csv', encoding='utf-8', index=False)
+# regression_data_other_rounds_and_asd.to_csv('./fasc_data/machine_scores_mental_terms/other_rounds.csv', encoding='utf-8', index=False)
+# regression_data_round_three_ASD_1.to_csv('./fasc_data/machine_scores_mental_terms/last_round.csv', encoding='utf-8', index=False)
+# os.chdir("./fasc_data/machine_scores_mental_terms")
+# extension = 'csv'
+# all_filenames = [i for i in glob.glob('*.{}'.format(extension))]
+# combined_csv = pd.concat([pd.read_csv(f) for f in all_filenames ], sort=False)
+# combined_csv.to_csv( "combined_machine_scores_mental_terms.csv", index=False, encoding='utf-8-sig')
+if (verifying_algorithm == True):
+  nlp_count_arr = []
+  mental_terms_tot_arr = []
+  for row in regression_data.Mental_terms_tot_2_machine:
+    nlp_count_arr.append(int(row))
 
-can_do_comparison = True
-for row in old_mental_terms_count:
-  if (pd.isna(row)):
-    can_do_comparison = False
-    #print("can't calculate b/c NA exists in column. Please count mental terms for comparison")
+  can_do_comparison = True
+  for row in old_mental_terms_count:
+    if (pd.isna(row)):
+      can_do_comparison = False
+      #print("can't calculate b/c NA exists in column. Please count mental terms for comparison")
+    else:
+      mental_terms_tot_arr.append(int(row))
+
+
+  num_wrong = 0
+  if (can_do_comparison):
+    for i, num in enumerate(nlp_count_arr):
+      num_for_mental = mental_terms_tot_arr[i]
+      if (num_for_mental != num):
+        num_wrong = num_wrong + 1
+    print(num_wrong)
   else:
-    mental_terms_tot_arr.append(int(row))
+    print('must get rid of NA in mental terms total column to do this')
 
-
-num_wrong = 0
-if (can_do_comparison):
-  for i, num in enumerate(nlp_count_arr):
-    num_for_mental = mental_terms_tot_arr[i]
-    if (num_for_mental != num):
-      num_wrong = num_wrong + 1
-  print(num_wrong)
-else:
-  print('must get rid of NA in mental terms total column to do this')
-
-print(mental_terms_tot_arr, nlp_count_arr)
+# print(mental_terms_tot_arr, nlp_count_arr)
