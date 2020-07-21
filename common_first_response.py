@@ -23,7 +23,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import make_scorer
 from sklearn.metrics import accuracy_score
 
-current_condition = 'G'
+current_condition = 'A'
 
 regression_data = pd.read_csv('./fasc_data/FASC_S17_F17_S18_all_Rounds_12-7-19_CHECKED.csv', encoding = "ISO-8859-1")
 regression_data = regression_data[~regression_data['username'].isin([2201, 2212, 2302, 2305, 0, 3218, 2305, 3105, 3018])]
@@ -31,8 +31,8 @@ regression_data = regression_data.dropna(subset=['Com_first_resp'])
 regression_data = regression_data.dropna(subset=['spelling_checked_response_text'])
 regression_data = regression_data.loc[regression_data['condition_value'] == current_condition]
 print(len(regression_data))
-test_set_s17 = regression_data.loc[regression_data['Year'] == 'S17'].sample(frac=0.2, random_state=0)
-regression_data = regression_data.drop(test_set_s17.index)
+# test_set_s17 = regression_data.loc[regression_data['Year'] == 'S17'].sample(frac=0.2, random_state=0)
+# regression_data = regression_data.drop(test_set_s17.index)
 print(len(regression_data))
 # test_set_s18 = regression_data.loc[regression_data['Year'] == 'F17_S18'].sample(frac=0.2, random_state=0)
 # regression_data = regression_data.drop(test_set_s18.index)
@@ -44,8 +44,8 @@ regression_data_length = len(regression_data)
 
 
 # #test s17 only
-test_set = test_set_s17
-test_set = test_set.loc[test_set['condition_value'] == current_condition]
+# test_set = test_set_s17
+# test_set = test_set.loc[test_set['condition_value'] == current_condition]
 
 #test s18 only
 # test_set = test_set_s18
@@ -63,11 +63,12 @@ test_set = test_set.loc[test_set['condition_value'] == current_condition]
 # print(len(test_set))
 
 #s19 alone
-# test_set = pd.read_csv('./fasc_data/FASC_S19_cleaned_SC_reliability_CHECKED.csv', encoding = "ISO-8859-1")
+test_set = pd.read_csv('./fasc_data/Combined_S19_Data_7-8-20.csv', encoding = "ISO-8859-1")
+test_set = test_set.dropna(subset=['spelling_checked_response_text'])
 # test_set = test_set.loc[test_set['Round'] == 1]
-# test_set = test_set.loc[test_set['condition_value'] == current_condition]
+test_set = test_set.loc[test_set['condition_value'] == current_condition]
 # test_set = test_set.dropna(subset=['Com_first_resp'])
-# print(len(test_set))
+print(len(test_set))
 
 training_set = regression_data
 # validation_set = regression_data[-100:]
@@ -257,9 +258,9 @@ for sen in range(0, len(Z)):
 print(documents_z)
 from sklearn.pipeline import Pipeline
 text_clf = Pipeline([
-  ('vect', CountVectorizer(max_df=0.6, max_features=200, ngram_range=(1,2),stop_words=stopwords.words('english'))),
+  ('vect', CountVectorizer(max_df=0.5, max_features=500, ngram_range=(1,2),stop_words=stopwords.words('english'))),
   ('tfidf', TfidfTransformer(use_idf=True)),
-  ('clf', GradientBoostingClassifier(learning_rate=0.05, n_estimators=300, random_state=0))
+  ('clf', GradientBoostingClassifier(random_state=0))
 ])
 parameters = {
 #   'vect__ngram_range': [(1,1), (1,2), (1,3), (1,4)],
@@ -348,12 +349,13 @@ parameters = {
 # text
 text_clf.fit(X, y)
 v_pred = text_clf.predict(Z)
-print(np.mean(v_pred == v))
-from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 print(v_pred)
-print(confusion_matrix(v,v_pred))
-print(classification_report(v,v_pred))
-print(accuracy_score(v, v_pred))
+# print(np.mean(v_pred == v))
+# from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+# print(v_pred)
+# print(confusion_matrix(v,v_pred))
+# print(classification_report(v,v_pred))
+# print(accuracy_score(v, v_pred))
 
 # max_features = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000]
 # train_results = []
@@ -387,37 +389,7 @@ print(accuracy_score(v, v_pred))
 # plt.xlabel('max features')
 # plt.show()
 
-# max_depths = np.linspace(1, 32, 32, endpoint=True)
-# train_results = []
-# test_results = []
-# for max_depth in max_depths:
-#   vectorizer = CountVectorizer(max_features=max_feature, min_df=1, max_df=0.7, ngram_range=(1,3), stop_words=stopwords.words('english'))
-#   X = vectorizer.fit_transform(documents).toarray()
-#   X_model = vectorizer.fit(documents)
-#   # print(X.vocabulary_)
-#   vectorizer_new = CountVectorizer(decode_error='replace',max_features=max_feature, min_df=1, max_df=0.7, ngram_range=(1,3), vocabulary=X_model.vocabulary_)
-#   Z = vectorizer_new.fit_transform(documents_z).toarray()
-#   from sklearn.feature_extraction.text import TfidfTransformer
-#   tfidfconverter = TfidfTransformer()
-#   X = tfidfconverter.fit_transform(X).toarray()
-#   Z = tfidfconverter.fit_transform(Z).toarray()
-#   model = GradientBoostingClassifier()
-#   model.fit(X, y)
-#   train_pred = model.predict(X)
-#   false_positive_rate, true_positive_rate, thresholds = roc_curve(y, train_pred)
-#   roc_auc = auc(false_positive_rate, true_positive_rate)
-#   train_results.append(roc_auc)
-#   v_pred = model.predict(Z)
-#   false_positive_rate, true_positive_rate, thresholds = roc_curve(v, v_pred)
-#   roc_auc = auc(false_positive_rate, true_positive_rate)
-#   test_results.append(roc_auc)
-# from matplotlib.legend_handler import HandlerLine2D
-# line1, = plt.plot(max_features, train_results, 'b', label='Train AUC')
-# line2, = plt.plot(max_features, test_results, 'r', label='Test AUC')
-# plt.legend(handler_map={line1: HandlerLine2D(numpoints=2)})
-# plt.ylabel('AUC score')
-# plt.xlabel('max features')
-# plt.show()
+
 
 from sklearn.feature_extraction.text import CountVectorizer
 # vectorizer = CountVectorizer(max_features=500, max_df=0.5, ngram_range=(1,2), stop_words=stopwords.words('english'))
@@ -455,105 +427,8 @@ classifier = GradientBoostingClassifier()
 # roc_auc = auc(false_positive_rate, true_positive_rate)
 # print(roc_auc)
 
-#optimal learning_rates
-# learning_rates = [1, 0.5, 0.25, 0.1, 0.05, 0.01]
-# train_results = []
-# test_results = []
-# for eta in learning_rates:
-#    model = GradientBoostingClassifier(learning_rate=eta)
-#    model.fit(X, y)
-#    train_pred = model.predict(X)
-#    false_positive_rate, true_positive_rate, thresholds = roc_curve(y, train_pred)
-#    roc_auc = auc(false_positive_rate, true_positive_rate)
-#    train_results.append(roc_auc)
 
-#    v_pred = model.predict(Z)
-#    false_positive_rate, true_positive_rate, thresholds = roc_curve(v, v_pred)
-#    roc_auc = auc(false_positive_rate, true_positive_rate)
-#    test_results.append(roc_auc)
 
-# from matplotlib.legend_handler import HandlerLine2D
-# line1, = plt.plot(learning_rates, train_results, "b", label="Train AUC")
-# line2, = plt.plot(learning_rates, test_results, "r", label="Test AUC")
-# plt.legend(handler_map={line1: HandlerLine2D(numpoints=2)})
-# plt.ylabel('AUC score')
-# plt.xlabel('learning rate')
-# plt.show()
-
-#optimal estimators
-# n_estimators = [1, 2, 4, 8, 16, 32, 64, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1300, 1400, 1500, 1600, 1700]
-# train_results = []
-# test_results = []
-# for estimator in n_estimators:
-#    model = GradientBoostingClassifier(n_estimators=estimator)
-#    model.fit(X, y)
-#    train_pred = model.predict(X)
-#    false_positive_rate, true_positive_rate, thresholds = roc_curve(y, train_pred)
-#    roc_auc = auc(false_positive_rate, true_positive_rate)
-#    train_results.append(roc_auc)
-#    v_pred = model.predict(Z)
-#    false_positive_rate, true_positive_rate, thresholds = roc_curve(v, v_pred)
-#    roc_auc = auc(false_positive_rate, true_positive_rate)
-#    test_results.append(roc_auc)
-# from matplotlib.legend_handler import HandlerLine2D
-# line1, = plt.plot(n_estimators, train_results, 'b', label='Train AUC')
-# line2, = plt.plot(n_estimators, test_results, 'r', label='Test AUC')
-# plt.legend(handler_map={line1: HandlerLine2D(numpoints=2)})
-# plt.ylabel('AUC score')
-# plt.xlabel('n_estimators')
-# plt.show()
-# best_score_estimators = (max(test_results))
-# indexOf_best_score_estimators = test_results.index(best_score_estimators)
-# print(n_estimators[indexOf_best_score_estimators])
-
-#optimal max depth
-# max_depths = np.linspace(1, 32, 32, endpoint=True)
-# train_results = []
-# test_results = []
-# for max_depth in max_depths:
-#    model = GradientBoostingClassifier(max_depth=max_depth)
-#    model.fit(X, y)
-#    train_pred = model.predict(X)
-#    false_positive_rate, true_positive_rate, thresholds = roc_curve(y, train_pred)
-#    roc_auc = auc(false_positive_rate, true_positive_rate)
-#    train_results.append(roc_auc)
-#    v_pred = model.predict(Z)
-#    false_positive_rate, true_positive_rate, thresholds = roc_curve(v, v_pred)
-#    roc_auc = auc(false_positive_rate, true_positive_rate)
-#    test_results.append(roc_auc)
-# from matplotlib.legend_handler import HandlerLine2D
-# line1, = plt.plot(max_depths, train_results, 'b', label='Train AUC')
-# line2, = plt.plot(max_depths, test_results, 'r', label='Test AUC')
-# plt.legend(handler_map={line1: HandlerLine2D(numpoints=2)})
-# plt.ylabel('AUC score')
-# plt.xlabel('Tree depth')
-# plt.show()
-# best_score_depth = (max(test_results))
-# indexOf_best_score_depth = test_results.index(best_score_depth)
-# print(max_depths[indexOf_best_score_depth])
-
-#optimal features
-# max_features = list(range(1,regression_data.shape[1]))
-# train_results = []
-# test_results = []
-# for max_feature in max_features:
-#    model = GradientBoostingClassifier(max_features=max_feature)
-#    model.fit(X, y)
-#    train_pred = model.predict(X)
-#    false_positive_rate, true_positive_rate, thresholds = roc_curve(y, train_pred)
-#    roc_auc = auc(false_positive_rate, true_positive_rate)
-#    train_results.append(roc_auc)
-#    v_pred = model.predict(Z)
-#    false_positive_rate, true_positive_rate, thresholds = roc_curve(v, v_pred)
-#    roc_auc = auc(false_positive_rate, true_positive_rate)
-#    test_results.append(roc_auc)
-# from matplotlib.legend_handler import HandlerLine2D
-# line1, = plt.plot(max_features, train_results, 'b', label='Train AUC')
-# line2, = plt.plot(max_features, test_results, 'r', label='Test AUC')
-# plt.legend(handler_map={line1: HandlerLine2D(numpoints=2)})
-# plt.ylabel('AUC score')
-# plt.xlabel('max features')
-# plt.show()
 
 # classifier.fit(X, y)
 
