@@ -60,7 +60,7 @@ with open('./Phrase_Lemmatized.txt', 'r') as wordDoc:
 # x.to_csv('./fasc_data/remaining_80_percent.csv')
 
 
-regression_data = pd.read_csv('./fasc_data/FASC_S19_cleaned_SC_reliability_CHECKED.csv', encoding = "ISO-8859-1")
+regression_data = pd.read_csv('./fasc_data/machine_scores/combined_machine_scores.csv', encoding = "ISO-8859-1")
 regression_data_other_rounds_and_asd = pd.read_csv('./fasc_data/FASC_S17_F17_S18_all_Rounds_12-7-19_CHECKED.csv', encoding = "ISO-8859-1")
 regression_data_round_three_ASD_1 = pd.read_csv('./fasc_data/FASC_S17_F17_S18_all_Rounds_12-7-19_CHECKED.csv', encoding = "ISO-8859-1")
 
@@ -185,7 +185,7 @@ for sentence in response_text:
 
 #common_first_response_combined = pd.read_csv('./fasc_data/machine_scores/combined_machine_scores.csv', encoding = "ISO-8859-1")
 regression_data_sample_data = regression_data
-regression_data_sample_data['nlp_count'] = regression_count_new_col
+regression_data_sample_data['Mental_terms_tot_machine'] = regression_count_new_col
 regression_data_sample_data['adjective_list'] = regression_adjective_list
 regression_data_sample_data['verb_list'] = regression_verb_list
 regression_data_sample_data['noun_list'] = regression_noun_list
@@ -194,9 +194,9 @@ regression_data_sample_data['phrase_list'] = regression_phrase_list
 regression_data.to_csv('./fasc_data/machine_mental_terms_descriptives.csv', encoding='utf-8', index=False)
 if (verifying_algorithm == True):
   old_mental_terms_count = regression_data.Mental_terms_tot_2
-regression_data['Mental_terms_tot'] = regression_count_new_col
+# regression_data['Mental_terms_tot'] = regression_count_new_col
 
-regression_data.to_csv('./fasc_data/machine_scores_mental_terms/machine_mental_terms_score_S19.csv', encoding='utf-8', index=False)
+regression_data.to_csv('./fasc_data/completed_scores/s19_complete.csv', encoding='utf-8', index=False)
 # regression_data_other_rounds_and_asd.to_csv('./fasc_data/machine_scores_mental_terms/other_rounds.csv', encoding='utf-8', index=False)
 # regression_data_round_three_ASD_1.to_csv('./fasc_data/machine_scores_mental_terms/last_round.csv', encoding='utf-8', index=False)
 # os.chdir("./fasc_data/machine_scores_mental_terms")

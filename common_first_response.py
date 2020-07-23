@@ -23,7 +23,8 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import make_scorer
 from sklearn.metrics import accuracy_score
 
-current_condition = 'A'
+current_condition = 'G'
+test_reliability = False
 
 regression_data = pd.read_csv('./fasc_data/FASC_S17_F17_S18_all_Rounds_12-7-19_CHECKED.csv', encoding = "ISO-8859-1")
 regression_data = regression_data[~regression_data['username'].isin([2201, 2212, 2302, 2305, 0, 3218, 2305, 3105, 3018])]
@@ -63,13 +64,24 @@ regression_data_length = len(regression_data)
 # print(len(test_set))
 
 #s19 alone
-test_set = pd.read_csv('./fasc_data/Combined_S19_Data_7-8-20.csv', encoding = "ISO-8859-1")
-test_set = test_set.dropna(subset=['spelling_checked_response_text'])
-# test_set = test_set.loc[test_set['Round'] == 1]
-test_set = test_set.loc[test_set['condition_value'] == current_condition]
-# test_set = test_set.dropna(subset=['Com_first_resp'])
-print(len(test_set))
+test_set = pd.read_csv('./fasc_data/FASC_S19_cleaned_SC_reliability_CHECKED.csv', encoding = "ISO-8859-1")
+test_username = pd.read_csv('./fasc_data/Combined_S19_Data_7-21-20.csv', encoding = "ISO-8859-1")
+test_username = list(test_username['username'])
+test_set = test_set[test_set['username'].isin(test_username)]
 
+test_set = test_set.loc[test_set['condition_value'] == current_condition]
+test_set = test_set.dropna(subset=['spelling_checked_response_text'])
+test_set = test_set.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
+
+# test_set = test_set.dropna(subset=['Com_first_resp'])
+test_set_reliability = test_set.loc[test_set['Round'] == 1]
+test_set_reliability = test_set_reliability.dropna(subset=['Com_first_resp'])
+print(len(test_set), 'test set length')
+
+if test_reliability:
+    test_set = test_set_reliability
+else:
+    test_set = test_set
 training_set = regression_data
 # validation_set = regression_data[-100:]
 
@@ -257,11 +269,127 @@ for sen in range(0, len(Z)):
 # print(documents)
 print(documents_z)
 from sklearn.pipeline import Pipeline
-text_clf = Pipeline([
-  ('vect', CountVectorizer(max_df=0.5, max_features=500, ngram_range=(1,2),stop_words=stopwords.words('english'))),
-  ('tfidf', TfidfTransformer(use_idf=True)),
-  ('clf', GradientBoostingClassifier(random_state=0))
-])
+
+#A
+#vect_max_df = 0.5
+#vect_max_features = 500
+#vect_ngram_range = 1,2
+#clf_n_estimators = default
+#clf_learning_rate = default
+#clf_max_depth = default
+#use_idf = True
+if current_condition == 'A':
+  text_clf = Pipeline([
+    ('vect', CountVectorizer(max_df=0.5, max_features=400, ngram_range=(1,2), stop_words=stopwords.words('english'))),
+    ('tfidf', TfidfTransformer(use_idf=True)),
+    ('clf', GradientBoostingClassifier(learning_rate=0.25, max_depth=3, n_estimators=600, random_state=0))
+  ])
+
+#B
+#vect_max_df = 0.4
+#vect_max_features=1100
+#vect_ngram_range = 1,3
+#clf_learning_rate = default
+#clf_n_estimators = default
+#use_idf = True
+#clf_max_depth = 5
+
+if current_condition == 'B':
+  text_clf = Pipeline([
+    ('vect', CountVectorizer(max_df=0.4, max_features=1100, ngram_range=(1,3), stop_words=stopwords.words('english'))),
+    ('tfidf', TfidfTransformer(use_idf=True)),
+    ('clf', GradientBoostingClassifier(max_depth=5, random_state=0))
+  ])
+
+#C
+#vect_max_df=0.6
+#vect_max_features=100
+#vect_ngram_range=(1,2)
+#clf_learning_rate=0.05
+#clf_n_estimators=300
+#use_idf=True
+#clf_max_depth=default
+#max_features_clf = 5
+
+if current_condition == 'C':
+  text_clf = Pipeline([
+    ('vect', CountVectorizer(max_df=0.6, max_features=100, ngram_range=(1,2), stop_words=stopwords.words('english'))),
+    ('tfidf', TfidfTransformer(use_idf=True)),
+    ('clf', GradientBoostingClassifier(learning_rate=0.05, max_features=5, n_estimators=300, random_state=0))
+  ])
+
+#D
+#clf_max_depth=4.0
+
+if current_condition == 'D':
+  text_clf = Pipeline([
+    ('vect', CountVectorizer(stop_words=stopwords.words('english'))),
+    ('tfidf', TfidfTransformer(use_idf=True)),
+    ('clf', GradientBoostingClassifier(max_depth=4, random_state=0))
+  ])
+
+#E
+#vect_max_df=0.9
+#vect_max_features=1800
+#vect_ngram_range=(1,3)
+#clf_learning_rate=0.25
+#clf_n_estimators=800
+#use_idf=False
+#clf_max_depth=default
+
+if current_condition == 'E':
+  text_clf = Pipeline([
+    ('vect', CountVectorizer(max_df=0.9, max_features=1800, ngram_range=(1,3), stop_words=stopwords.words('english'))),
+    ('tfidf', TfidfTransformer(use_idf=False)),
+    ('clf', GradientBoostingClassifier(learning_rate=0.25, n_estimators=800, random_state=0))
+  ])
+
+#F
+#vect_max_df=0.5
+#vect_max_features=1100
+#vect_ngram_range=1,2
+#clf_learning_rate=default
+#clf_n_estimators=default
+#use_idf=True
+#clf_max_depth=2
+
+if current_condition == 'F':
+  text_clf = Pipeline([
+    ('vect', CountVectorizer(max_df=0.5, max_features=1100, ngram_range=(1,2), stop_words=stopwords.words('english'))),
+    ('tfidf', TfidfTransformer(use_idf=True)),
+    ('clf', GradientBoostingClassifier(max_depth=2, random_state=0))
+  ])
+
+#G
+#vect_max_df=0.6
+#vect_max_features=200
+#vect_ngram_range=1,2
+#clf__learning_rate: 0.05
+##clf__n_estimators: 300
+#tfidf__use_idf: True
+
+if current_condition == 'G':
+  text_clf = Pipeline([
+    ('vect', CountVectorizer(max_df=0.6, max_features=200, ngram_range=(1,2), stop_words=stopwords.words('english'))),
+    ('tfidf', TfidfTransformer(use_idf=True)),
+    ('clf', GradientBoostingClassifier(learning_rate=0.05, n_estimators=300, random_state=0))
+  ])
+
+#H
+#vect_max_df = 0.5
+#vect__max_features = 400
+#vect_ngram_range = 1,2
+#clf_learning_rate = 0.25
+#clf_n_estimators = 600
+#clf_max_depth = 3 (default)
+#tfidf__use_idf = True
+
+if current_condition == 'H':
+  text_clf = Pipeline([
+    ('vect', CountVectorizer(max_df=0.5, max_features=400, ngram_range=(1,2), stop_words=stopwords.words('english'))),
+    ('tfidf', TfidfTransformer(use_idf=True)),
+    ('clf', GradientBoostingClassifier(learning_rate=0.25, n_estimators=600, max_depth=3, random_state=0))
+  ])
 parameters = {
 #   'vect__ngram_range': [(1,1), (1,2), (1,3), (1,4)],
 #   'vect__max_features': [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000],
@@ -280,82 +408,18 @@ parameters = {
 # for param_name in sorted(parameters.keys()):
 #   print("%s: %r" % (param_name, gs_clf.best_params_[param_name]))
 
-#A
-#max_df = 0.5
-#max_features = 500
-#ngram_range = 1,2
-#n_estimators = default
-#learning_rate = default
-#max_depth = default
-#use_idf = True
-
-#B
-#max_df = 0.4
-#max_features=1100
-#ngram_range = 1,3
-#learning_rate = default
-#n_estimators = default
-#use_idf = True
-#max_depth = 5
-
-#C
-#max_df=0.6
-#max_features=100
-#ngram_range=(1,2)
-#learning_rate=0.05
-#n_estimators=300
-#use_idf=True
-#max_depth=default
-#max_features_clf = 5
-
-#D
-#max_depth=4.0
-
-#E
-#max_df=0.9
-#max_features=1800
-#ngram_range=(1,3)
-#learning_rate=0.25
-#n_estimators=800
-#use_idf=False
-#max_depth=default
-
-#F
-#max_df=0.5
-#max_features=1100
-#ngram_range=1,2
-#learning_rate=default
-#n_estimators=default
-#use_idf=True
-#max_depth=2
-
-#G
-#max_df=0.6
-#max_features=200
-#ngram_range=1,2
-#clf__learning_rate: 0.05
-##clf__n_estimators: 300
-#tfidf__use_idf: True
-
-#H
-#max_df = 0.5
-#vect__max_features = 400
-#ngram_range = 1,2
-#learning_rate = 0.25
-#n_estimators = 600
-#max_depth = 3 (default)
-#tfidf__use_idf = True
 
 # text
 text_clf.fit(X, y)
 v_pred = text_clf.predict(Z)
 print(v_pred)
-# print(np.mean(v_pred == v))
-# from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
-# print(v_pred)
-# print(confusion_matrix(v,v_pred))
-# print(classification_report(v,v_pred))
-# print(accuracy_score(v, v_pred))
+if test_reliability:
+  print(np.mean(v_pred == v))
+  from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+  print(v_pred)
+  print(confusion_matrix(v,v_pred))
+  print(classification_report(v,v_pred))
+  print(accuracy_score(v, v_pred))
 
 # max_features = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000]
 # train_results = []
@@ -480,30 +544,33 @@ from sklearn.metrics import classification_report, confusion_matrix, accuracy_sc
 
 # regression_data_test_new['Com_first_resp'] = list_of_predictions
 
-# if (current_condition == 'A'):
-#   regression_data_test_new.to_csv('./fasc_data/machine_scores/condition_a.csv', encoding='utf-8', index=False)
-#   training_set_train.to_csv('./fasc_data/machine_scores/condition_a_train.csv', encoding='utf-8', index=False)
-# if (current_condition == 'B'):
-#   regression_data_test_new.to_csv('./fasc_data/machine_scores/condition_b.csv', encoding='utf-8', index=False)
-#   training_set_train.to_csv('./fasc_data/machine_scores/condition_b_train.csv', encoding='utf-8', index=False)
-# if (current_condition == 'C'):
-#   regression_data_test_new.to_csv('./fasc_data/machine_scores/condition_c.csv', encoding='utf-8', index=False)
-#   training_set_train.to_csv('./fasc_data/machine_scores/condition_c_train.csv', encoding='utf-8', index=False)
-# if (current_condition == 'D'):
-#   regression_data_test_new.to_csv('./fasc_data/machine_scores/condition_d.csv', encoding='utf-8', index=False)
-#   training_set_train.to_csv('./fasc_data/machine_scores/condition_d_train.csv', encoding='utf-8', index=False)
-# if (current_condition == 'E'):
-#   regression_data_test_new.to_csv('./fasc_data/machine_scores/condition_e.csv', encoding='utf-8', index=False)
-#   training_set_train.to_csv('./fasc_data/machine_scores/condition_e_train.csv', encoding='utf-8', index=False)
-# if (current_condition == 'F'):
-#   regression_data_test_new.to_csv('./fasc_data/machine_scores/condition_f.csv', encoding='utf-8', index=False)
-#   training_set_train.to_csv('./fasc_data/machine_scores/condition_f_train.csv', encoding='utf-8', index=False)
-# if (current_condition == 'G'):
-#   regression_data_test_new.to_csv('./fasc_data/machine_scores/condition_g.csv', encoding='utf-8', index=False)
-#   training_set_train.to_csv('./fasc_data/machine_scores/condition_g_train.csv', encoding='utf-8', index=False)
-# if (current_condition == 'H'):
-#   regression_data_test_new.to_csv('./fasc_data/machine_scores/condition_h.csv', encoding='utf-8', index=False)
-#   training_set_train.to_csv('./fasc_data/machine_scores/condition_h_train.csv', encoding='utf-8', index=False)
+regression_data_test_new = test_set
+regression_data_test_new['Com_first_resp_machine'] = list(v_pred)
+if test_reliability != True:
+  if (current_condition == 'A'):
+    regression_data_test_new.to_csv('./fasc_data/machine_scores/condition_a.csv', encoding='utf-8', index=False)
+  #   training_set_train.to_csv('./fasc_data/machine_scores/condition_a_train.csv', encoding='utf-8', index=False)
+  if (current_condition == 'B'):
+    regression_data_test_new.to_csv('./fasc_data/machine_scores/condition_b.csv', encoding='utf-8', index=False)
+  #   training_set_train.to_csv('./fasc_data/machine_scores/condition_b_train.csv', encoding='utf-8', index=False)
+  if (current_condition == 'C'):
+    regression_data_test_new.to_csv('./fasc_data/machine_scores/condition_c.csv', encoding='utf-8', index=False)
+  #   training_set_train.to_csv('./fasc_data/machine_scores/condition_c_train.csv', encoding='utf-8', index=False)
+  if (current_condition == 'D'):
+    regression_data_test_new.to_csv('./fasc_data/machine_scores/condition_d.csv', encoding='utf-8', index=False)
+  #   training_set_train.to_csv('./fasc_data/machine_scores/condition_d_train.csv', encoding='utf-8', index=False)
+  if (current_condition == 'E'):
+    regression_data_test_new.to_csv('./fasc_data/machine_scores/condition_e.csv', encoding='utf-8', index=False)
+  #   training_set_train.to_csv('./fasc_data/machine_scores/condition_e_train.csv', encoding='utf-8', index=False)
+  if (current_condition == 'F'):
+    regression_data_test_new.to_csv('./fasc_data/machine_scores/condition_f.csv', encoding='utf-8', index=False)
+  #   training_set_train.to_csv('./fasc_data/machine_scores/condition_f_train.csv', encoding='utf-8', index=False)
+  if (current_condition == 'G'):
+    regression_data_test_new.to_csv('./fasc_data/machine_scores/condition_g.csv', encoding='utf-8', index=False)
+  #   training_set_train.to_csv('./fasc_data/machine_scores/condition_g_train.csv', encoding='utf-8', index=False)
+  if (current_condition == 'H'):
+    regression_data_test_new.to_csv('./fasc_data/machine_scores/condition_h.csv', encoding='utf-8', index=False)
+  #   training_set_train.to_csv('./fasc_data/machine_scores/condition_h_train.csv', encoding='utf-8', index=False)
 
 
 
@@ -515,8 +582,8 @@ from sklearn.metrics import classification_report, confusion_matrix, accuracy_sc
 # print(mismatch)
 
 
-# os.chdir("./fasc_data/machine_scores")
-# extension = 'csv'
-# all_filenames = [i for i in glob.glob('*.{}'.format(extension))]
-# combined_csv = pd.concat([pd.read_csv(f) for f in all_filenames ], sort=False)
-# combined_csv.to_csv( "combined_machine_scores.csv", index=False, encoding='utf-8-sig')
+os.chdir("./fasc_data/machine_scores")
+extension = 'csv'
+all_filenames = [i for i in glob.glob('*.{}'.format(extension))]
+combined_csv = pd.concat([pd.read_csv(f) for f in all_filenames ], sort=False)
+combined_csv.to_csv( "combined_machine_scores.csv", index=False, encoding='utf-8-sig')
