@@ -60,7 +60,7 @@ with open('./Phrase_Lemmatized.txt', 'r') as wordDoc:
 # x.to_csv('./fasc_data/remaining_80_percent.csv')
 
 
-regression_data = pd.read_csv('./fasc_data/machine_scores/combined_machine_scores.csv', encoding = "ISO-8859-1")
+regression_data = pd.read_csv('./fasc_data/machine_scores/combined_machine_scores_S19.csv', encoding = "ISO-8859-1")
 regression_data_other_rounds_and_asd = pd.read_csv('./fasc_data/FASC_S17_F17_S18_all_Rounds_12-7-19_CHECKED.csv', encoding = "ISO-8859-1")
 regression_data_round_three_ASD_1 = pd.read_csv('./fasc_data/FASC_S17_F17_S18_all_Rounds_12-7-19_CHECKED.csv', encoding = "ISO-8859-1")
 

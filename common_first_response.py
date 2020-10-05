@@ -23,21 +23,27 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import make_scorer
 from sklearn.metrics import accuracy_score
 
-current_condition = 'G'
+current_condition = 'H'
 test_reliability = False
 
 regression_data = pd.read_csv('./fasc_data/FASC_S17_F17_S18_all_Rounds_12-7-19_CHECKED.csv', encoding = "ISO-8859-1")
-regression_data = regression_data[~regression_data['username'].isin([2201, 2212, 2302, 2305, 0, 3218, 2305, 3105, 3018])]
+# print(len(regression_data))
+# regression_data = pd.read_csv('./fasc_data/combined_machine_scores_S17_F17_S18.csv', encoding = "ISO-8859-1")
+regression_data = regression_data[~regression_data['ASD'].isin([1])]
+regression_data = regression_data[~regression_data['username'].isin([2201, 2212, 2302, 2305, 0, 3218, 2303, 3105, 3018])]
 regression_data = regression_data.dropna(subset=['Com_first_resp'])
 regression_data = regression_data.dropna(subset=['spelling_checked_response_text'])
 regression_data = regression_data.loc[regression_data['condition_value'] == current_condition]
-print(len(regression_data))
+
 # test_set_s17 = regression_data.loc[regression_data['Year'] == 'S17'].sample(frac=0.2, random_state=0)
 # regression_data = regression_data.drop(test_set_s17.index)
 print(len(regression_data))
 # test_set_s18 = regression_data.loc[regression_data['Year'] == 'F17_S18'].sample(frac=0.2, random_state=0)
 # regression_data = regression_data.drop(test_set_s18.index)
-print(len(regression_data))
+#s17 & s18 combined
+# test_set = regression_data.sample(frac=0.2, random_state=0)
+# regression_data = regression_data.drop(test_set.index)
+# print(len(regression_data))
 
 print(len(regression_data))
 regression_data_length = len(regression_data)
@@ -53,6 +59,7 @@ regression_data_length = len(regression_data)
 # test_set = test_set.loc[test_set['condition_value'] == current_condition]
 # print(len(test_set))
 
+
 ##fresh data from s19, combined with s18
 # test_set = pd.read_csv('./fasc_data/FASC_S19_cleaned_SC_reliability_CHECKED.csv', encoding = "ISO-8859-1")
 # test_set = test_set.loc[test_set['Round'] == 1]
@@ -65,23 +72,25 @@ regression_data_length = len(regression_data)
 
 #s19 alone
 test_set = pd.read_csv('./fasc_data/FASC_S19_cleaned_SC_reliability_CHECKED.csv', encoding = "ISO-8859-1")
-test_username = pd.read_csv('./fasc_data/Combined_S19_Data_7-21-20.csv', encoding = "ISO-8859-1")
-test_username = list(test_username['username'])
-test_set = test_set[test_set['username'].isin(test_username)]
-
+# test_username = pd.read_csv('./fasc_data/Combined_S19_Data_7-21-20.csv', encoding = "ISO-8859-1")
+# test_username = list(test_username['username'])
+# test_set = test_set[test_set['username'].isin(test_username)]
 test_set = test_set.loc[test_set['condition_value'] == current_condition]
 test_set = test_set.dropna(subset=['spelling_checked_response_text'])
 test_set = test_set.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
-
 # test_set = test_set.dropna(subset=['Com_first_resp'])
-test_set_reliability = test_set.loc[test_set['Round'] == 1]
+test_set_reliability = test_set.loc[test_set['reliability_rounds'] == 1]
 test_set_reliability = test_set_reliability.dropna(subset=['Com_first_resp'])
 print(len(test_set), 'test set length')
+
+#if s17 & s18 combined
+# test_set_reliability = test_set
 
 if test_reliability:
     test_set = test_set_reliability
 else:
     test_set = test_set
+
 training_set = regression_data
 # validation_set = regression_data[-100:]
 
@@ -296,7 +305,7 @@ if current_condition == 'A':
 
 if current_condition == 'B':
   text_clf = Pipeline([
-    ('vect', CountVectorizer(max_df=0.4, max_features=1100, ngram_range=(1,3), stop_words=stopwords.words('english'))),
+    ('vect', CountVectorizer(max_df=0.4, max_features=1100, ngram_range=(1,2), stop_words=stopwords.words('english'))),
     ('tfidf', TfidfTransformer(use_idf=True)),
     ('clf', GradientBoostingClassifier(max_depth=5, random_state=0))
   ])
@@ -390,16 +399,21 @@ if current_condition == 'H':
     ('tfidf', TfidfTransformer(use_idf=True)),
     ('clf', GradientBoostingClassifier(learning_rate=0.25, n_estimators=600, max_depth=3, random_state=0))
   ])
-parameters = {
+# parameters = {
 #   'vect__ngram_range': [(1,1), (1,2), (1,3), (1,4)],
 #   'vect__max_features': [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000],
-#   'vect__max_df': [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1],
-#   'tfidf__use_idf': (True, False),
-#   'clf__n_estimators': [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000],
-#   'clf__learning_rate': [1, 0.5, 0.25, 0.1, 0.05, 0.01]
-    # 'clf__max_depth': np.linspace(1, 32, 32, endpoint=True),
-    # 'clf__max_features': list(range(1,regression_data.shape[1]))
-}
+#   # 'vect__max_df': [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1],
+# #   'tfidf__use_idf': (True, False),
+# #   'clf__n_estimators': [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000],
+# #   'clf__learning_rate': [1, 0.5, 0.25, 0.1, 0.05, 0.01]
+#     # 'clf__max_depth': np.linspace(1, 32, 32, endpoint=True),
+#     # 'clf__max_features': list(range(1,regression_data.shape[1]))
+# }
+# text_clf = Pipeline([
+#   ('vect', CountVectorizer()),
+#   ('tfidf', TfidfTransformer()),
+#   ('clf', GradientBoostingClassifier())
+# ])
 # scoring = {'AUC': 'roc_auc', 'Accuracy': make_scorer(accuracy_score)}
 # gs_clf = GridSearchCV(text_clf, parameters, cv=5, n_jobs=-1, scoring=scoring, refit='AUC')
 # gs_clf.fit(X, y)
@@ -549,28 +563,28 @@ regression_data_test_new['Com_first_resp_machine'] = list(v_pred)
 if test_reliability != True:
   if (current_condition == 'A'):
     regression_data_test_new.to_csv('./fasc_data/machine_scores/condition_a.csv', encoding='utf-8', index=False)
-  #   training_set_train.to_csv('./fasc_data/machine_scores/condition_a_train.csv', encoding='utf-8', index=False)
+    # training_set.to_csv('./fasc_data/machine_scores/condition_a_train.csv', encoding='utf-8', index=False)
   if (current_condition == 'B'):
     regression_data_test_new.to_csv('./fasc_data/machine_scores/condition_b.csv', encoding='utf-8', index=False)
-  #   training_set_train.to_csv('./fasc_data/machine_scores/condition_b_train.csv', encoding='utf-8', index=False)
+    # training_set.to_csv('./fasc_data/machine_scores/condition_b_train.csv', encoding='utf-8', index=False)
   if (current_condition == 'C'):
     regression_data_test_new.to_csv('./fasc_data/machine_scores/condition_c.csv', encoding='utf-8', index=False)
-  #   training_set_train.to_csv('./fasc_data/machine_scores/condition_c_train.csv', encoding='utf-8', index=False)
+    # training_set.to_csv('./fasc_data/machine_scores/condition_c_train.csv', encoding='utf-8', index=False)
   if (current_condition == 'D'):
     regression_data_test_new.to_csv('./fasc_data/machine_scores/condition_d.csv', encoding='utf-8', index=False)
-  #   training_set_train.to_csv('./fasc_data/machine_scores/condition_d_train.csv', encoding='utf-8', index=False)
+    # training_set.to_csv('./fasc_data/machine_scores/condition_d_train.csv', encoding='utf-8', index=False)
   if (current_condition == 'E'):
     regression_data_test_new.to_csv('./fasc_data/machine_scores/condition_e.csv', encoding='utf-8', index=False)
-  #   training_set_train.to_csv('./fasc_data/machine_scores/condition_e_train.csv', encoding='utf-8', index=False)
+    # training_set.to_csv('./fasc_data/machine_scores/condition_e_train.csv', encoding='utf-8', index=False)
   if (current_condition == 'F'):
     regression_data_test_new.to_csv('./fasc_data/machine_scores/condition_f.csv', encoding='utf-8', index=False)
-  #   training_set_train.to_csv('./fasc_data/machine_scores/condition_f_train.csv', encoding='utf-8', index=False)
+    # training_set.to_csv('./fasc_data/machine_scores/condition_f_train.csv', encoding='utf-8', index=False)
   if (current_condition == 'G'):
     regression_data_test_new.to_csv('./fasc_data/machine_scores/condition_g.csv', encoding='utf-8', index=False)
-  #   training_set_train.to_csv('./fasc_data/machine_scores/condition_g_train.csv', encoding='utf-8', index=False)
+    # training_set.to_csv('./fasc_data/machine_scores/condition_g_train.csv', encoding='utf-8', index=False)
   if (current_condition == 'H'):
     regression_data_test_new.to_csv('./fasc_data/machine_scores/condition_h.csv', encoding='utf-8', index=False)
-  #   training_set_train.to_csv('./fasc_data/machine_scores/condition_h_train.csv', encoding='utf-8', index=False)
+    # training_set.to_csv('./fasc_data/machine_scores/condition_h_train.csv', encoding='utf-8', index=False)
 
 
 
@@ -581,9 +595,8 @@ if test_reliability != True:
 
 # print(mismatch)
 
-
 os.chdir("./fasc_data/machine_scores")
 extension = 'csv'
 all_filenames = [i for i in glob.glob('*.{}'.format(extension))]
 combined_csv = pd.concat([pd.read_csv(f) for f in all_filenames ], sort=False)
-combined_csv.to_csv( "combined_machine_scores.csv", index=False, encoding='utf-8-sig')
+combined_csv.to_csv( "combined_machine_scores_S19.csv", index=False, encoding='utf-8-sig')
